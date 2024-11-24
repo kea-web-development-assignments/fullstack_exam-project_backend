@@ -1,0 +1,31 @@
+{
+  "name": "web-development-exam-project-backend",
+  "version": "0.0.1",
+  "type": "module",
+  "description": "",
+  "main": "start.js",
+  "scripts": {
+    "start": "node start",
+    "dev": "NODE_ENV=development nodemon start"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kea-web-development-assignments/fullstack_exam-project_backend"
+  },
+  "author": "Haidar Almajedi <haidar@deranged.dk>",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^1.7.7",
+    "bcrypt": "^5.1.1",
+    "dexpress-main": "^0.2.10",
+    "dotenv": "^16.4.5",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.8.2",
+    "node-steam-openid": "^1.2.4",
+    "nodemailer": "^6.9.16",
+    "nodemailer-express-handlebars": "^7.0.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.7"
+  }
+}

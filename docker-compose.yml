@@ -1,0 +1,19 @@
+version: '3.5'
+services:
+  mongodb:
+    image: 'bitnami/mongodb:8.0.3'
+    environment:
+      - MONGODB_USERNAME=all-about-games
+      - MONGODB_PASSWORD=all-about-games
+      - MONGODB_DATABASE=all-about-games
+      - MONGODB_ADVERTISED_HOSTNAME=mongodb
+      - MONGODB_REPLICA_SET_MODE=primary
+      - MONGODB_ROOT_PASSWORD=all-about-games
+      - MONGODB_REPLICA_SET_KEY=replicasetkey
+    ports:
+      - 27017:27017
+  mailhog:
+    image: mailhog/mailhog:v1.0.0
+    ports:
+    - 1025:1025 # smtp server
+    - 8025:8025 # web ui
