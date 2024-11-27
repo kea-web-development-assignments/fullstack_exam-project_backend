@@ -21,8 +21,13 @@ export function createAccessToken({ _id, email, username, firstName, lastName, r
 
 export function verifyAccessToken(token) {
     try {
-        return jwt.verify(token, JWT_SECRET);
+        return jwt.verify(token, process.env.JWT_SECRET);
     } catch (err) {
+        if(err instanceof jwt.TokenExpiredError) {
+            throw new Error('Your access token has expired, please log in again.', {
+                cause: { error: err },
+            });
+        }
         if(err instanceof jwt.JsonWebTokenError) {
             throw new Error('Invalid access token', {
                 cause: { error: err },
