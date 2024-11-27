@@ -44,13 +44,17 @@ const userSchema = new Schema({
 }, { timestamps: true });
 
 userSchema.pre('save', async function(next) {
-    this.password = await bcrypt.hash(this.password, 10);
+    if(this.password) {
+        this.password = await bcrypt.hash(this.password, 10);
+    }
 
     next();
 });
 
 userSchema.pre('updateOne', async function(next) {
-    this.set('password', await bcrypt.hash(this.get('password'), 10));
+    if(this.get('password')) {
+        this.set('password', await bcrypt.hash(this.get('password'), 10));
+    }
 
     next();
 });
