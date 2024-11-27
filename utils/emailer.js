@@ -22,6 +22,7 @@ export default async function createMailingService() {
     return {
         sendVerificationMail: (user) => sendVerificationMail(transporter, user),
         sendPasswordResetMail: (user) => sendPasswordResetMail(transporter, user),
+        sendAccountDeletedMail: (user) => sendAccountDeletedMail(transporter, user),
     }
 }
 
@@ -51,6 +52,18 @@ async function sendPasswordResetMail(transporter, { email, firstName, resetCode 
             name: firstName,
             code: resetCode,
             url: process.env.FRONTEND_URL,
+        },
+    });
+}
+
+async function sendAccountDeletedMail(transporter, { email, firstName }) {
+    await transporter.sendMail({
+        from,
+        to: process.env.SMTP_TEST_EMAIL ? process.env.SMTP_TEST_EMAIL : email,
+        subject: 'Your AllAboutGames account has been deleted',
+        template: 'deleted-account',
+        context: {
+            name: firstName,
         },
     });
 }

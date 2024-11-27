@@ -1,6 +1,7 @@
 import express from 'dexpress-main';
 import User from './models/User.js';
 import validateUser from './middleware/validateUser.js';
+import authenticateUser from './middleware/authenticateUser.js';
 import { createAccessToken } from './utils/authenticator.js';
 import { randomUUID } from 'crypto';
 
@@ -66,6 +67,13 @@ export default async function(mailService) {
             return res.status(404).send({
                 error: {
                     message: 'No user with that email or password was found.',
+                }
+            });
+        }
+        if(user.deletedAt) {
+            return res.status(403).send({
+                error: {
+                    message: 'Your account has been deleted, contact support for more info.',
                 }
             });
         }
@@ -174,6 +182,28 @@ export default async function(mailService) {
                 },
             });
         }
+
+        res.send({ message: 'ok' });
+    });
+
+    app.delete('/me', express.json(), authenticateUser(), async (req, res) => {
+        const result = await User.updateOne(
+            { _id: req.user._id },
+            { deletedAt: Date.now() }
+        );
+
+        if(result.modifiedCount === 0) {
+            return res.status(500).send({
+                error: {
+                    message: 'Failed to delete your account, try again later.',
+                },
+            });
+        }
+
+        await mailService.sendAccountDeletedMail({
+            email: req.user.email,
+            firstName: req.user.firstName,
+        });
 
         res.send({ message: 'ok' });
     });
