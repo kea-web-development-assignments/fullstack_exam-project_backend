@@ -13,7 +13,6 @@ const userSchema = new Schema({
     lastName: String,
     email: String,
     password: String,
-    wishlisted: gamesRef,
     lists: {
         wantToPlay: gamesRef,
         playing: gamesRef,
