@@ -232,6 +232,25 @@ export default async function(mailService) {
     });
 
     app.delete('/me', express.json(), authenticateUser(), async (req, res) => {
+        const { password } = req.query;
+        if(!password) {
+            return res.status(400).send({
+                error: {
+                    message: 'Password must be given to delete your account.',
+                },
+            });
+        }
+
+        const isPasswordCorrect = await bcrypt.compare(password, req.user.password);
+
+        if(!isPasswordCorrect) {
+            return res.status(400).send({
+                error: {
+                    message: 'Password is incorrect.',
+                },
+            });
+        }
+
         const result = await User.updateOne(
             { _id: req.user._id },
             { deletedAt: Date.now() }
