@@ -7,10 +7,16 @@ const gamesRef = [{
 }];
 
 const userSchema = new Schema({
-    username: String,
+    username: {
+        type: String,
+        unique: true,
+    },
     firstName: String,
     lastName: String,
-    email: String,
+    email: {
+        type: String,
+        unique: true,
+    },
     password: String,
     gameLists: [{
         list: {
