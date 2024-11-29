@@ -55,9 +55,13 @@ export default function(
             });
         }
 
-        //only return fields that have been validated or that are in `includeFieldsWithoutValidation`
+        //only return (non-empty) fields that have been validated or that are in `includeFieldsWithoutValidation`
         req.body = Object.fromEntries(
-            Object.entries(data).filter(([ key ]) => {
+            Object.entries(data).filter(([ key, value ]) => {
+                if(value === undefined || value === '' || value?.length === 0 || value?.[0]?.size === 0) {
+                    return false;
+                }
+
                 return fields.includes(key) || includeFieldsWithoutValidation.includes(key);
             })
         );
