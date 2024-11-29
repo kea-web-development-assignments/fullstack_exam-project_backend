@@ -58,6 +58,14 @@ userSchema.pre('updateOne', async function(next) {
     next();
 });
 
+userSchema.pre('findOneAndUpdate', async function(next) {
+    if(this.get('password')) {
+        this.set('password', await bcrypt.hash(this.get('password'), 10));
+    }
+
+    next();
+});
+
 userSchema.static('login', async function({ email, password }) {
     const user = await this.model('User').findOne({ email });
 
@@ -74,4 +82,4 @@ userSchema.static('login', async function({ email, password }) {
     return user;
 });
 
-export default model('User', userSchema);
+export default model('User', userSchema, 'users');

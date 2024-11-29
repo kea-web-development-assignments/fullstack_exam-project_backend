@@ -4,6 +4,7 @@ import validateUser from './middleware/validateUser.js';
 import authenticateUser from './middleware/authenticateUser.js';
 import { createAccessToken } from './utils/authenticator.js';
 import { randomUUID } from 'crypto';
+import bcrypt from 'bcrypt';
 
 // import SteamAuth from 'node-steam-openid';
 // import axios from 'axios';
@@ -60,7 +61,7 @@ export default async function(mailService) {
         res.send({ message: 'ok' });
     });
 
-    app.post('/login', express.json(), validateUser([ 'email' ], [ 'password' ]), async (req, res) => {
+    app.post('/login', express.json(), validateUser([ 'email' ], true, [ 'password' ]), async (req, res) => {
         const user = await User.login(req.body);
 
         if(!user) {
@@ -184,6 +185,50 @@ export default async function(mailService) {
         }
 
         res.send({ message: 'ok' });
+    });
+
+    app.get('/me', authenticateUser(), async (req, res) => {
+        res.send({
+            ...req.user.toObject(),
+            password: undefined,
+        });
+    });
+
+    app.patch('/me', express.json(), validateUser(
+        [ 'username', 'firstName', 'lastName', 'email', 'password' ],
+        false,
+        [ 'oldPassword' ],
+    ), authenticateUser(), async (req, res) => {
+        if(req.body.password) {
+            if(!req.body.oldPassword) {
+                return res.status(400).send({
+                    error: {
+                        message: 'Old password must be given to update password.',
+                    },
+                });
+            }
+
+            const result = await bcrypt.compare(req.body.oldPassword, req.user.password);
+
+            if(!result) {
+                return res.status(400).send({
+                    error: {
+                        message: 'Old password is incorrect.',
+                    },
+                });
+            }
+        }
+
+        const newUser = await User.findOneAndUpdate(
+            { _id: req.user._id},
+            req.body,
+            { new: true },
+        );
+
+        res.send({
+            ...newUser.toObject(),
+            password: undefined,
+        });
     });
 
     app.delete('/me', express.json(), authenticateUser(), async (req, res) => {

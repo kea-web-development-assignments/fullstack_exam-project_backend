@@ -26,6 +26,7 @@ const userFieldsLookup = {
 
 export default function(
     fields = ['username', 'firstName', 'lastName', 'email', 'password'], //default fields
+    required = true,
     includeFieldsWithoutValidation,
 ) {
     return (req, res, next) => {
@@ -37,6 +38,7 @@ export default function(
 
         for (const field of fields) {
             if(data[field] === undefined || data[field] === '' || data[field]?.length === 0 || data[field]?.[0]?.size === 0) {
+                if(!required) continue;
                 errors[field] = fieldRequiredMessage(userFieldsLookup[field].label);
             }
             else if(userFieldsLookup[field].regex && !(new RegExp(userFieldsLookup[field].regex)).test(data[field])) {
