@@ -27,7 +27,7 @@ const userFieldsLookup = {
 export default function(
     fields = ['username', 'firstName', 'lastName', 'email', 'password'], //default fields
     required = true,
-    includeFieldsWithoutValidation,
+    includeFieldsWithoutValidation = [],
 ) {
     return (req, res, next) => {
         const data = req.body;

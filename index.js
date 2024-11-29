@@ -1,6 +1,8 @@
 import express from 'dexpress-main';
 import User from './models/User.js';
+import Game from './models/Game.js';
 import validateUser from './middleware/validateUser.js';
+import validateGame from './middleware/validateGame.js';
 import authenticateUser from './middleware/authenticateUser.js';
 import { createAccessToken } from './utils/authenticator.js';
 import { randomUUID } from 'crypto';
@@ -270,6 +272,71 @@ export default async function(mailService) {
         });
 
         res.send({ message: 'ok' });
+    });
+
+    app.post('/games', express.json(), authenticateUser([ 'admin' ]), validateGame(), async (req, res) => {
+        const game = await Game.create(req.body);
+
+        res.send({ game });
+    });
+
+    app.get('/games', authenticateUser(), async (req, res) => {
+        const games = await Game.find();
+
+        res.send({ games });
+    });
+
+    app.get('/games/:id', authenticateUser(), async (req, res) => {
+        const { id } = req.params;
+
+        const game = await Game.findById(id);
+
+        if(!game) {
+            return res.status(404).send({
+                error: {
+                    message: 'No game with that ID was found.',
+                },
+            });
+        }
+
+        res.send({ game });
+    });
+
+    app.patch('/games/:id', express.json(), authenticateUser([ 'admin' ]), validateGame(
+        [ 'name', 'slug', 'description', 'releaseDate', 'image' ],
+        false,
+    ), async (req, res) => {
+        const { id } = req.params;
+
+        const game = await Game.findByIdAndUpdate(id, req.body, {
+            new: true
+        });
+
+        if(!game) {
+            return res.status(404).send({
+                error: {
+                    message: 'No game with that ID was found.',
+                },
+            });
+        }
+
+        res.send({ game });
+    });
+
+    app.delete('/games/:id', authenticateUser([ 'admin' ]), async (req, res) => {
+        const { id } = req.params;
+
+        const game = await Game.findByIdAndDelete(id);
+
+        if(!game) {
+            return res.status(404).send({
+                error: {
+                    message: 'No game with that ID was found.',
+                },
+            });
+        }
+
+        res.send({ game });
     });
 
     // app.get("/auth/steam", async (req, res) => {
