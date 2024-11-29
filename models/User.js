@@ -12,13 +12,17 @@ const userSchema = new Schema({
     lastName: String,
     email: String,
     password: String,
-    lists: {
-        wantToPlay: gamesRef,
-        playing: gamesRef,
-        completed: gamesRef,
-        paused: gamesRef,
-        dropped: gamesRef,
-    },
+    gameLists: [{
+        list: {
+            type: String,
+            enum: [ 'want-to-play', 'playing', 'completed', 'paused', 'dropped' ],
+            default: 'want-to-play',
+        },
+        game: {
+            type: Schema.Types.ObjectId,
+            ref: 'Game',
+        },
+    }],
     role: {
         type: String,
         enum: [ 'user', 'admin' ],
