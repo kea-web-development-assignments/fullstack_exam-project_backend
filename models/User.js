@@ -1,11 +1,6 @@
 import { Schema, model } from 'mongoose';
 import bcrypt from 'bcrypt';
 
-const gamesRef = [{
-    type: Schema.Types.ObjectId,
-    ref: 'Game',
-}];
-
 const userSchema = new Schema({
     username: {
         type: String,
@@ -18,8 +13,8 @@ const userSchema = new Schema({
         unique: true,
     },
     password: String,
-    gameLists: [{
-        list: {
+    list: [{
+        group: {
             type: String,
             enum: [ 'want-to-play', 'playing', 'completed', 'paused', 'dropped' ],
             default: 'want-to-play',
@@ -51,14 +46,6 @@ const userSchema = new Schema({
         default: undefined,
     },
 }, { timestamps: true });
-
-userSchema.pre('save', async function(next) {
-    if(this.password) {
-        this.password = await bcrypt.hash(this.password, 10);
-    }
-
-    next();
-});
 
 userSchema.pre('updateOne', async function(next) {
     if(this.get('password')) {
