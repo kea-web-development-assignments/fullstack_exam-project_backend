@@ -15,12 +15,14 @@
   "author": "Haidar Almajedi <haidar@deranged.dk>",
   "license": "ISC",
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.701.0",
     "axios": "^1.7.7",
     "bcrypt": "^5.1.1",
     "dexpress-main": "^0.2.10",
     "dotenv": "^16.4.5",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.8.2",
+    "multer": "^1.4.5-lts.1",
     "node-steam-openid": "^1.2.4",
     "nodemailer": "^6.9.16",
     "nodemailer-express-handlebars": "^7.0.0"

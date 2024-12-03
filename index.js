@@ -7,6 +7,9 @@ import authenticateUser from './middleware/authenticateUser.js';
 import { createAccessToken } from './utils/authenticator.js';
 import { randomUUID } from 'crypto';
 import bcrypt from 'bcrypt';
+import multer from 'multer';
+
+const upload = multer({ storage: multer.memoryStorage() })
 
 // import SteamAuth from 'node-steam-openid';
 // import axios from 'axios';
@@ -17,7 +20,7 @@ import bcrypt from 'bcrypt';
 //   apiKey: "<steamApiKey>" // Steam API key
 // });
 
-export default async function(mailService) {
+export default async function(mailService, imageService) {
     const app = await express();
 
     app.post('/signup', express.json(), validateUser(), async (req, res) => {

@@ -17,3 +17,32 @@ services:
     ports:
     - 1025:1025 # smtp server
     - 8025:8025 # web ui
+  minio:
+    image: minio/minio
+    ports:
+    - "9000:9000"
+    - "9001:9001"
+    volumes:
+    - ./.minio/data:/data
+    environment:
+      - MINIO_ROOT_USER=minioadmin
+      - MINIO_ROOT_PASSWORD=minioadmin
+    command: server /data --console-address ":9001"
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+  # For creating a public minio bucket on startup
+  createpublicbucket:
+    image: minio/mc
+    network_mode: service:minio
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+        /usr/bin/mc alias set local http://localhost:9000 minioadmin minioadmin;
+        /usr/bin/mc mb local/allaboutgames --ignore-existing;
+        /usr/bin/mc anonymous set download local/allaboutgames;
+      "

@@ -8,3 +8,6 @@ Thumbs.db
 .env
 .env.*
 !.env.development
+
+# Minio
+/.minio
