@@ -52,8 +52,11 @@ export default async function () {
     // seed platforms
     const platforms = await Platform.create([
         { name: 'PC' },
-        { name: 'PlayStation' },
-        { name: 'Xbox' },
+        { name: 'PS4' },
+        { name: 'PS5' },
+        { name: 'Xbox One' },
+        { name: 'Xbox Series S' },
+        { name: 'Xbox Series X' },
         { name: 'Nintendo Switch' },
         { name: 'Mobile' },
     ]);
