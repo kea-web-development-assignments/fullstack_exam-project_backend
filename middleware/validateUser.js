@@ -37,7 +37,7 @@ export default function(
         const errors = {};
 
         for (const field of fields) {
-            if(data[field] === undefined || data[field] === '' || data[field]?.length === 0 || data[field]?.[0]?.size === 0) {
+            if(data[field] === undefined || data[field] === '') {
                 if(!required) continue;
                 errors[field] = fieldRequiredMessage(userFieldsLookup[field].label);
             }
@@ -58,7 +58,7 @@ export default function(
         //only return (non-empty) fields that have been validated or that are in `includeFieldsWithoutValidation`
         req.body = Object.fromEntries(
             Object.entries(data).filter(([ key, value ]) => {
-                if(value === undefined || value === '' || value?.length === 0 || value?.[0]?.size === 0) {
+                if(value === undefined || value === '') {
                     return false;
                 }
 
