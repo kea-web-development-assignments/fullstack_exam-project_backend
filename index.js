@@ -1,10 +1,14 @@
 import express from 'dexpress-main';
 import User from './models/User.js';
 import Game from './models/Game.js';
+import Tag from './models/Tag.js';
+import Platform from './models/Platform.js';
+import { Types } from 'mongoose';
 import validateUser from './middleware/validateUser.js';
 import validateGame from './middleware/validateGame.js';
 import authenticateUser from './middleware/authenticateUser.js';
 import { createAccessToken } from './utils/authenticator.js';
+import slugFromName from './utils/slugFromName.js';
 import { randomUUID } from 'crypto';
 import bcrypt from 'bcrypt';
 import multer from 'multer';
@@ -277,8 +281,69 @@ export default async function(mailService, imageService) {
         res.send({ message: 'ok' });
     });
 
-    app.post('/games', express.json(), authenticateUser([ 'admin' ]), validateGame(), async (req, res) => {
+    app.put('/me/list', express.json(), authenticateUser(), async (req, res) => {
+        const { id, group } = req.body;
+
+        if(!id || !group) {
+            return res.status(400).send({
+                error: {
+                    message: 'Game id and list group must be given to add a game to your list.',
+                },
+            });
+        }
+
+        req.user.list = req.user.list.filter(item => item.game.toString() !== id)
+        req.user.list.push({ game: id, group });
+        await req.user.save();
+
+        res.send({ list: req.user.list });
+    });
+
+    app.delete('/me/list/:id', authenticateUser(), async (req, res) => {
+        const { id } = req.params;
+
+        req.user.list = req.user.list.filter(item => item.game.toString() !== id);
+        await req.user.save();
+
+        res.send({ list: req.user.list });
+    });
+
+    app.post('/games', upload.fields([{ name: 'image'}, { name: 'screenshots[]' }]), authenticateUser([ 'admin' ]), validateGame(), async (req, res) => {
+        if(typeof req.body.image === 'string' || req.screenShots?.some(screenshot => typeof screenshot === 'string')) {
+            return res.status(400).send({
+                error: {
+                    message: 'Images must be files, not URLs.',
+                },
+            });
+        }
+
+        const { image, screenshots } = req.body;
+        delete req.body.image;
+        delete req.body.screenshots;
+
+        req.body.slug = slugFromName(req.body.name);
+
         const game = await Game.create(req.body);
+
+        if(image) {
+            const [ imageUrl ] = await imageService.saveImagesToS3({
+                path: `games/${game._id}`,
+                images: [ image ],
+            });
+            game.image = imageUrl;
+        }
+        if(screenshots?.length) {
+            const screenshotUrls = await imageService.saveImagesToS3({
+                path: `games/${game._id}/screenshots`,
+                images: screenshots,
+            });
+            game.screenshots = screenshotUrls;
+        }
+        if(!image && !screenshots?.length) {
+            return res.send({ game });
+        }
+
+        await game.save();
 
         res.send({ game });
     });
@@ -289,27 +354,47 @@ export default async function(mailService, imageService) {
         res.send({ games });
     });
 
-    app.get('/games/:id', authenticateUser(), async (req, res) => {
-        const { id } = req.params;
+    app.get('/games/:idOrSlug', authenticateUser(), async (req, res) => {
+        const { idOrSlug } = req.params;
 
-        const game = await Game.findById(id);
+        let game = await Game.findOne({
+            $or: [
+                { _id: Types.ObjectId.isValid(idOrSlug) ? idOrSlug : null },
+                { slug: idOrSlug },
+            ],
+        });
 
         if(!game) {
             return res.status(404).send({
                 error: {
-                    message: 'No game with that ID was found.',
+                    message: 'No game with that id or slug was found.',
                 },
             });
+        }
+
+        game = game.toObject();
+
+        const listItem = req.user.list.find(item => item.game.toString() === game._id.toString());
+        if(listItem) {
+            game.listGroup = listItem.group;
         }
 
         res.send({ game });
     });
 
-    app.patch('/games/:id', express.json(), authenticateUser([ 'admin' ]), validateGame(
-        [ 'name', 'slug', 'description', 'releaseDate', 'image' ],
+    app.patch('/games/:id', upload.fields([{ name: 'image'}, { name: 'screenshots[]' }]), authenticateUser([ 'admin' ]), validateGame(
+        [ 'name', 'description', 'releaseDate', 'image', 'screenshots', 'tags', 'platforms' ],
         false,
     ), async (req, res) => {
         const { id } = req.params;
+
+        const { image, screenshots } = req.body;
+        delete req.body.image;
+        delete req.body.screenshots;
+
+        if(req.body.name) {
+            req.body.slug = slugFromName(req.body.name);
+        }
 
         const game = await Game.findByIdAndUpdate(id, req.body, {
             new: true
@@ -322,6 +407,28 @@ export default async function(mailService, imageService) {
                 },
             });
         }
+
+        if(image) {
+            const [ imageUrl ] = await imageService.updateImagesInS3({
+                path: `games/${game._id}`,
+                newImages: [ image ],
+                oldImageUrls: [ game.image ],
+            });
+            game.image = imageUrl;
+        }
+        if(screenshots?.length) {
+            const screenshotUrls = await imageService.updateImagesInS3({
+                path: `games/${game._id}/screenshots`,
+                newImages: screenshots,
+                oldImageUrls: game.screenshots,
+            });
+            game.screenshots = screenshotUrls;
+        }
+        if(!image && !screenshots?.length) {
+            return res.send({ game });
+        }
+
+        await game.save();
 
         res.send({ game });
     });
@@ -339,7 +446,23 @@ export default async function(mailService, imageService) {
             });
         }
 
+        await imageService.deleteImagesFromS3({
+            imageUrls: [ game.image, ...(game.screenshots || []) ].filter(Boolean),
+        });
+
         res.send({ game });
+    });
+
+    app.get('/tags', authenticateUser(), async (req, res) => {
+        const tags = await Tag.find();
+
+        res.send({ tags });
+    });
+
+    app.get('/platforms', authenticateUser(), async (req, res) => {
+        const platforms = await Platform.find();
+
+        res.send({ platforms });
     });
 
     // app.get("/auth/steam", async (req, res) => {

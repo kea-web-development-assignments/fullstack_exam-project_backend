@@ -2,7 +2,10 @@ import { Schema, model } from 'mongoose';
 
 const gameSchema = new Schema({
     name: String,
-    slug: String,
+    slug: {
+        type: String,
+        unique: true,
+    },
     description: String,
     releaseDate: Date,
     image: String,
