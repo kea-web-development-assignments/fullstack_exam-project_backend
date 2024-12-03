@@ -349,9 +349,44 @@ export default async function(mailService, imageService) {
     });
 
     app.get('/games', authenticateUser(), async (req, res) => {
-        const games = await Game.find();
+        const {
+            searchQuery,
+            tags,
+            platforms,
+            from,
+            to,
+            start = 0,
+            limit = 30,
+        } = req.query;
+        const query = {};
+
+        if(searchQuery) {
+            query.$text = { $search: searchQuery };
+        }
+        if(tags && Array.isArray(JSON.parse(tags))) {
+            query['tags.name'] = { $in: JSON.parse(tags) };
+        }
+        if(platforms && Array.isArray(JSON.parse(platforms))) {
+            query['platforms.name'] = { $in: JSON.parse(platforms) };
+        }
+        if(!isNaN(Date.parse(from))) {
+            query.releaseDate ??= {};
+            query.releaseDate.$gte = new Date(from);
+        }
+        if(!isNaN(Date.parse(to))) {
+            query.releaseDate ??= {};
+            query.releaseDate.$lte = new Date(to);
+        }
+
+        const games = await Game.find(query).limit(limit).skip(start);
 
         res.send({ games });
+    });
+
+    app.get('/games-count', authenticateUser(), async (req, res) => {
+        const count = await Game.countDocuments();
+
+        res.send({ count });
     });
 
     app.get('/games/:idOrSlug', authenticateUser(), async (req, res) => {

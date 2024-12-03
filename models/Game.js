@@ -24,4 +24,6 @@ const gameSchema = new Schema({
     },
 }, { timestamps: true });
 
+gameSchema.index({ name: 'text', description: 'text' });
+
 export default model('Game', gameSchema, 'games');
