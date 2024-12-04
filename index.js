@@ -355,7 +355,7 @@ export default async function(mailService, imageService) {
             platforms,
             from,
             to,
-            start = 0,
+            start = 29,
             limit = 30,
         } = req.query;
         const query = {};
@@ -379,14 +379,9 @@ export default async function(mailService, imageService) {
         }
 
         const games = await Game.find(query).limit(limit).skip(start);
+        const count = await Game.countDocuments(query);
 
-        res.send({ games });
-    });
-
-    app.get('/games-count', authenticateUser(), async (req, res) => {
-        const count = await Game.countDocuments();
-
-        res.send({ count });
+        res.send({ games, count });
     });
 
     app.get('/games/:idOrSlug', authenticateUser(), async (req, res) => {
