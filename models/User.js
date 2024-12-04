@@ -1,5 +1,7 @@
-import { Schema, model } from 'mongoose';
+import mongoose from 'mongoose';
 import bcrypt from 'bcrypt';
+
+const { Schema, model, connection } = mongoose;
 
 const userSchema = new Schema({
     username: {
@@ -46,6 +48,20 @@ const userSchema = new Schema({
         default: undefined,
     },
 }, { timestamps: true });
+
+userSchema.pre('save', async function(next) {
+    if(this.password) {
+        const user = await connection.db.collection('users').findOne({ _id: this._id });
+
+        if(user?.password === this.password) {
+            return next();
+        }
+
+        this.password = await bcrypt.hash(this.password, 10);
+    }
+
+    next();
+});
 
 userSchema.pre('updateOne', async function(next) {
     if(this.get('password')) {
