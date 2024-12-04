@@ -399,6 +399,29 @@ export default async function(mailService, imageService) {
         res.send({ games, count });
     });
 
+    app.get('/games-calendar', authenticateUser(), async (req, res) => {
+        const {
+            from,
+            start = 0,
+            limit = 30,
+        } = req.query;
+        const query = { releaseDate: { $gte: new Date(from) } };
+
+        const groupedGames = await Game
+            .aggregate()
+            .match(query)
+            .skip(parseInt(start))
+            .limit(parseInt(limit))
+            .group({
+                _id: { $dateToString: { format: '%d/%m/%Y', date: '$releaseDate' } },
+                games: { $push: '$$ROOT' },
+            })
+            .sort({ _id: 1 });
+        const count = await Game.countDocuments(query);
+
+        res.send({ groupedGames, count });
+    });
+
     app.get('/games/:idOrSlug', authenticateUser(), async (req, res) => {
         const { idOrSlug } = req.params;
 
