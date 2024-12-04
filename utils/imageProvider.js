@@ -12,7 +12,7 @@ export default async function createImageService() {
             accessKeyId: process.env.S3_ACCESS_KEY,
             secretAccessKey: process.env.S3_SECRET_KEY,
         },
-        forcePathStyle: process.env.NODE_ENV === 'development',
+        forcePathStyle: true,
     });
 
     return {
