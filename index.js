@@ -281,6 +281,21 @@ export default async function(mailService, imageService) {
         res.send({ message: 'ok' });
     });
 
+    app.get('/me/list', authenticateUser(), async (req, res) => {
+        const { group } = req.query;
+
+        if(group) {
+            req.user.list = req.user.list.filter(item => item.group === group);
+        }
+
+        await req.user.populate({
+            path: 'list',
+            populate: { path: 'game' }
+        });
+
+        res.send({ games: req.user.list });
+    });
+
     app.put('/me/list', express.json(), authenticateUser(), async (req, res) => {
         const { id, group } = req.body;
 
