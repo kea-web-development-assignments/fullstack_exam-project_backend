@@ -59,6 +59,8 @@ async function saveImagesToS3(s3, { path, images }) {
 }
 
 async function deleteImagesFromS3(s3, { imageUrls }) {
+    imageUrls = imageUrls?.filter((imageUrl) => imageUrl.startsWith(process.env.S3_CDN_URL));
+
     if(imageUrls.length === 0) {
         return;
     }
