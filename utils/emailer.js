@@ -26,7 +26,7 @@ export default async function createMailingService() {
     }
 }
 
-const from = 'AllAboutGames <mailer@allaboutgames.xyz>';
+const from = `AllAboutGames <${process.env.SMTP_FROM_EMAIL}>`;
 
 async function sendVerificationMail(transporter, { email, firstName, verificationCode }) {
     await transporter.sendMail({
