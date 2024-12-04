@@ -370,7 +370,7 @@ export default async function(mailService, imageService) {
             platforms,
             from,
             to,
-            start = 29,
+            start = 0,
             limit = 30,
         } = req.query;
         const query = {};
