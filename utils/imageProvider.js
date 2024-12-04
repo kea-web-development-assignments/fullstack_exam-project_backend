@@ -1,7 +1,7 @@
 import {
     S3Client,
     PutObjectCommand,
-    DeleteObjectsCommand,
+    DeleteObjectCommand,
 } from '@aws-sdk/client-s3';
 
 export default async function createImageService() {
@@ -64,14 +64,14 @@ async function deleteImagesFromS3(s3, { imageUrls }) {
     }
 
     try {
-        await s3.send(new DeleteObjectsCommand({
-            Bucket: process.env.S3_BUCKET_NAME,
-            Delete: {
-                Objects: imageUrls.map((imageUrl) => ({
-                    Key: (new URL(imageUrl)).pathname.slice(`/${process.env.S3_BUCKET_NAME}/`.length),
-                })),
-            },
-        }));
+        const deleteCommands = imageUrls.map((imageUrl) => {
+            return s3.send(new DeleteObjectCommand({
+                Bucket: process.env.S3_BUCKET_NAME,
+                Key:  (new URL(imageUrl)).pathname.slice(`/${process.env.S3_BUCKET_NAME}/`.length),
+            }));
+        });
+
+        await Promise.all(deleteCommands);
     } catch(error) {
         console.error("Failed to delete images", error);
 
