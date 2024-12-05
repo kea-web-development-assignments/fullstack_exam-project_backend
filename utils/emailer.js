@@ -19,16 +19,17 @@ export default async function createMailingService() {
         viewPath: 'views/',
     }));
 
+    const from = `AllAboutGames <${process.env.SMTP_FROM_EMAIL}>`;
+
     return {
-        sendVerificationMail: (user) => sendVerificationMail(transporter, user),
-        sendPasswordResetMail: (user) => sendPasswordResetMail(transporter, user),
-        sendAccountDeletedMail: (user) => sendAccountDeletedMail(transporter, user),
+        sendVerificationMail: (user) => sendVerificationMail(transporter, from, user),
+        sendPasswordResetMail: (user) => sendPasswordResetMail(transporter, from, user),
+        sendAccountDeletedMail: (user) => sendAccountDeletedMail(transporter, from, user),
     }
 }
 
-const from = `AllAboutGames <${process.env.SMTP_FROM_EMAIL}>`;
 
-async function sendVerificationMail(transporter, { email, firstName, verificationCode }) {
+async function sendVerificationMail(transporter, from, { email, firstName, verificationCode }) {
     await transporter.sendMail({
         from,
         to: process.env.SMTP_TEST_EMAIL ? process.env.SMTP_TEST_EMAIL : email,
@@ -42,7 +43,7 @@ async function sendVerificationMail(transporter, { email, firstName, verificatio
     });
 }
 
-async function sendPasswordResetMail(transporter, { email, firstName, resetCode }) {
+async function sendPasswordResetMail(transporter, from, { email, firstName, resetCode }) {
     await transporter.sendMail({
         from,
         to: process.env.SMTP_TEST_EMAIL ? process.env.SMTP_TEST_EMAIL : email,
@@ -56,7 +57,7 @@ async function sendPasswordResetMail(transporter, { email, firstName, resetCode 
     });
 }
 
-async function sendAccountDeletedMail(transporter, { email, firstName }) {
+async function sendAccountDeletedMail(transporter, from, { email, firstName }) {
     await transporter.sendMail({
         from,
         to: process.env.SMTP_TEST_EMAIL ? process.env.SMTP_TEST_EMAIL : email,
