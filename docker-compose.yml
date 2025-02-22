@@ -1,5 +1,23 @@
 version: '3.5'
 services:
+  nginx:
+    build:
+      context: .
+      dockerfile: Dockerfile.nginx
+    restart: always
+    ports:
+      - 4141:80
+      - 4242:443 # for ssl
+    depends_on:
+      - app
+  app:
+    build: .
+    restart: unless-stopped
+    env_file: .env.production
+    ports:
+      - 3131:3131
+    depends_on:
+      - mongodb
   mongodb:
     image: 'bitnami/mongodb:8.0.3'
     environment:
